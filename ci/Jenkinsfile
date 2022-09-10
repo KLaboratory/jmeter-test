@@ -1,16 +1,44 @@
 pipeline {
     agent any
+
+    parameters {
+        string(name: 'container_name', defaultValue: 'jmeter', description: 'Name of container')
+        string(name: 'image_timezone', defaultValue: 'America/Guayaquil', description: 'Time zone')
+        string(name: 'target_host', defaultValue: '192.168.1.121', description: 'Target host')
+        string(name: 'target_port', defaultValue: '80', description: 'Target port')
+    }
+
     stages {
         stage('Clone repo') {
             steps {
                 git branch: 'main', url: 'https://github.com/KLaboratory/jmeter-test.git'
             }
         }
-        stage('Execute Sanity test') {
+        /*stage('Execute Sanity test') {
             steps {
                 sh 'jmeter -Dlog_level.jmeter=DEBUG \
                         -JTARGET_PROTOCOL=http \
                         -JTARGET_HOST=localhost -JTARGET_PORT=3000 \
+                        -JTARGET_PATH=/api/v1 -JTHREADS=20 \
+                        -n -f -t ./test-plan.jmx -l ./test-plan.jtl -j ./jmeter.log \
+                        -e -o ./report'
+            }
+        }*/
+        stage('Execute test') {
+            steps {
+                try {
+                    sh 'docker rm ${container_name}'
+                } catch (Exception e) {
+                    echo 'Exception ocurred: ' + e.toString()
+                }
+                sh 'docker run --rm --name ${container_name} -i \
+                        -v ${PWD}:/opt/test -w /opt/test \
+                        -e IMAGE_TIMEZONE=${image_timezone} \
+                        --add-host=host.docker.internal:host-gateway \
+                        justb4/jmeter:5.4 \
+                        -Dlog_level.jmeter=DEBUG \
+                        -JTARGET_PROTOCOL=http \
+                        -JTARGET_HOST=${target_host} -JTARGET_PORT=${target_port} \
                         -JTARGET_PATH=/api/v1 -JTHREADS=20 \
                         -n -f -t ./test-plan.jmx -l ./test-plan.jtl -j ./jmeter.log \
                         -e -o ./report'
