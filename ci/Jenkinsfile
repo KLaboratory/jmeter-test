@@ -26,11 +26,14 @@ pipeline {
         }*/
         stage('Execute test') {
             steps {
-                try {
-                    sh 'docker rm ${container_name}'
-                } catch (Exception e) {
-                    echo 'Exception ocurred: ' + e.toString()
+                script {
+                    try {
+                        sh 'docker rm ${container_name}'
+                    } catch (Exception e) {
+                        echo 'Exception ocurred: ' + e.toString()
+                    }
                 }
+
                 sh 'docker run --rm --name ${container_name} -i \
                         -v ${PWD}:/opt/test -w /opt/test \
                         -e IMAGE_TIMEZONE=${image_timezone} \
