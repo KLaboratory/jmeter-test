@@ -1,15 +1,15 @@
 pipeline {
-    agent any
-
-    parameters {
-        string(name: 'container_name', defaultValue: 'jmeter', description: 'Name of container')
-        string(name: 'image_timezone', defaultValue: 'America/Guayaquil', description: 'Time zone')
-        string(name: 'target_host', defaultValue: '192.168.1.121', description: 'Target host')
-        string(name: 'target_port', defaultValue: '80', description: 'Target port')
-    }
-
-    kubernetes {
-        yaml '''
+    agent {
+        kubernetes {
+            // Rather than inline YAML, in a multibranch Pipeline you could use: yamlFile 'jenkins-pod.yaml'
+            // Or, to avoid YAML:
+            // containerTemplate {
+            //     name 'shell'
+            //     image 'ubuntu'
+            //     command 'sleep'
+            //     args 'infinity'
+            // }
+            yaml '''
             apiVersion: v1
             kind: Pod
             metadata:
@@ -35,8 +35,21 @@ pipeline {
                     hostPath:
                         path: /home/jenkins/agent/workspace/testpipeline
                         type: Directory
-        '''
+            '''
+            // Can also wrap individual steps:
+            // container('shell') {
+            //     sh 'hostname'
+            // }
+            defaultContainer 'jmeter'
+        }
     }
+
+    /*parameters {
+        string(name: 'container_name', defaultValue: 'jmeter', description: 'Name of container')
+        string(name: 'image_timezone', defaultValue: 'America/Guayaquil', description: 'Time zone')
+        string(name: 'target_host', defaultValue: '192.168.1.121', description: 'Target host')
+        string(name: 'target_port', defaultValue: '80', description: 'Target port')
+    }*/
 
     stages {
         stage('Clone repo') {
