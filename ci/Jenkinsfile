@@ -10,32 +10,17 @@ pipeline {
             //     args 'infinity'
             // }
             yaml '''
-            apiVersion: v1
-            kind: Pod
-            metadata:
-                name: jmeter
-            spec:
-                restartPolicy: Never
-                containers:
-                - name: jmeter
-                    image: justb4/jmeter:5.4
-                    workingDir: /opt/test
-                    resources:
-                    limits:
-                        memory: "512Mi"
-                        cpu: "500m"
-                    env:
-                    - name: IMAGE_TIMEZONE
-                        value: America/Guayaquil
-                    volumeMounts:
-                    - name: host-mount
-                        mountPath: /opt/test
-                volumes:
-                    - name: host-mount
-                    hostPath:
-                        path: /home/jenkins/agent/workspace/testpipeline
-                        type: Directory
-            '''
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: jmeter
+    image: justb4/jmeter:5.4
+    command:
+    - sleep
+    args:
+    - infinity
+'''
             // Can also wrap individual steps:
             // container('shell') {
             //     sh 'hostname'
