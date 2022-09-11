@@ -26,3 +26,7 @@ docker run --rm --name jmeter -i \
 	-n -f -t ./test-plan.jmx -l ./test-plan.jtl -j ./jmeter.log \
 	-e -o ./report
 ```
+
+sudo usermod -aG docker jenkins
+sudo usermod -aG root jenkins
+sudo chmod 664 /var/run/docker.sock
