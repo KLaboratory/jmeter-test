@@ -8,12 +8,57 @@ pipeline {
         string(name: 'target_port', defaultValue: '80', description: 'Target port')
     }
 
+    kubernetes {
+        yaml '''
+            apiVersion: v1
+            kind: Pod
+            metadata:
+                name: jmeter
+            spec:
+                restartPolicy: Never
+                containers:
+                - name: jmeter
+                    image: justb4/jmeter:5.4
+                    workingDir: /opt/test
+                    resources:
+                    limits:
+                        memory: "512Mi"
+                        cpu: "500m"
+                    env:
+                    - name: IMAGE_TIMEZONE
+                        value: America/Guayaquil
+                    volumeMounts:
+                    - name: host-mount
+                        mountPath: /opt/test
+                volumes:
+                    - name: host-mount
+                    hostPath:
+                        path: /home/jenkins/agent/workspace/testpipeline
+                        type: Directory
+        '''
+    }
+
     stages {
         stage('Clone repo') {
             steps {
                 git branch: 'main', url: 'https://github.com/KLaboratory/jmeter-test.git'
             }
         }
+
+        stage('Run test') {
+            steps {
+                container('jmeter') {
+                    sh 'jmeter -Dlog_level.jmeter=DEBUG \
+                        -JTARGET_PROTOCOL=http \
+                        -JTARGET_HOST=localhost -JTARGET_PORT=3000 \
+                        -JTARGET_PATH=/api/v1 -JTHREADS=20 \
+                        -n -f -t ./test-plan.jmx -l ./test-plan.jtl -j ./jmeter.log \
+                        -e -o ./report'
+                }
+            }
+        }
+
+        // Run on local
         /*stage('Execute Sanity test') {
             steps {
                 sh 'jmeter -Dlog_level.jmeter=DEBUG \
@@ -24,7 +69,9 @@ pipeline {
                         -e -o ./report'
             }
         }*/
-        stage('Execute test') {
+
+        // Run on local docker
+        /*stage('Execute test') {
             steps {
                 sh 'docker run --rm --name jmeter -i \
                         -v ${PWD}:/opt/test -w /opt/test \
@@ -38,7 +85,7 @@ pipeline {
                         -n -f -t ./test-plan.jmx -l ./test-plan.jtl -j ./jmeter.log \
                         -e -o ./report'
             }
-        }
+        }*/
         stage('Publish Report') {
             steps {
                 perfReport filterRegex: '', sourceDataFiles: '*.jtl'
