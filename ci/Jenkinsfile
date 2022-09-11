@@ -48,7 +48,7 @@ spec:
                 container('jmeter') {
                     sh 'jmeter -Dlog_level.jmeter=DEBUG \
                         -JTARGET_PROTOCOL=http \
-                        -JTARGET_HOST=localhost -JTARGET_PORT=3000 \
+                        -JTARGET_HOST=192.168.1.121 -JTARGET_PORT=3000 \
                         -JTARGET_PATH=/api/v1 -JTHREADS=20 \
                         -n -f -t ./test-plan.jmx -l ./test-plan.jtl -j ./jmeter.log \
                         -e -o ./report'
